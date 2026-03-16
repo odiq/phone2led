@@ -246,6 +246,10 @@
         <label for="messageInput">表示するテキスト</label>
         <input type="text" id="messageInput" placeholder="MESSAGE" maxlength="120" disabled>
         <div class="row" style="margin-top: 8px;">
+          <button id="heartBtn" class="btn btn-ghost" disabled>♡ 追加</button>
+          <button id="starBtn" class="btn btn-ghost" disabled>☆ 追加</button>
+        </div>
+        <div class="row" style="margin-top: 8px;">
           <button id="sendBtn" class="btn btn-primary" disabled>送信</button>
           <button id="clearBtn" class="btn btn-ghost" disabled>クリア</button>
         </div>
@@ -294,6 +298,8 @@
     const clearBtn = document.getElementById('clearBtn');
     const applyBtn = document.getElementById('applyBtn');
     const messageInput = document.getElementById('messageInput');
+    const heartBtn = document.getElementById('heartBtn');
+    const starBtn = document.getElementById('starBtn');
     const speedInput = document.getElementById('speedInput');
     const brightInput = document.getElementById('brightInput');
     const invertOff = document.getElementById('invertOff');
@@ -304,6 +310,8 @@
 
     function setEnabled(enabled) {
       messageInput.disabled = !enabled;
+      heartBtn.disabled = !enabled;
+      starBtn.disabled = !enabled;
       sendBtn.disabled = !enabled;
       clearBtn.disabled = !enabled;
       applyBtn.disabled = !enabled;
@@ -416,6 +424,20 @@
     clearBtn.addEventListener('click', () => {
       messageInput.value = "";
     });
+
+    function insertAtCursor(text) {
+      const start = messageInput.selectionStart || messageInput.value.length;
+      const end = messageInput.selectionEnd || messageInput.value.length;
+      const before = messageInput.value.substring(0, start);
+      const after = messageInput.value.substring(end);
+      messageInput.value = before + text + after;
+      const pos = start + text.length;
+      messageInput.setSelectionRange(pos, pos);
+      messageInput.focus();
+    }
+
+    heartBtn.addEventListener('click', () => insertAtCursor('♡'));
+    starBtn.addEventListener('click', () => insertAtCursor('☆'));
   </script>
 </body>
 </html>
