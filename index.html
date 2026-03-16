@@ -8,13 +8,11 @@
     :root {
       --bg: #0b0b0f;
       --panel: #14141b;
-      --panel-2: #1b1b24;
+      --panel-2: #1a1a22;
       --accent: #e4002b;
-      --accent-2: #ff4d6d;
       --text: #f2f2f7;
       --muted: #9aa0aa;
       --line: #2a2a36;
-      --glow: 0 0 24px rgba(228, 0, 43, 0.35);
     }
 
     * { box-sizing: border-box; }
@@ -22,73 +20,63 @@
     body {
       margin: 0;
       font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
-      background: radial-gradient(1200px 600px at 70% -20%, #2a0f14 0%, transparent 60%),
-                  radial-gradient(900px 400px at 10% 0%, #1a0a0f 0%, transparent 55%),
-                  var(--bg);
+      background: var(--bg);
       color: var(--text);
     }
 
     .wrap {
       max-width: 640px;
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 20px 14px 32px;
     }
 
     .title {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 14px;
     }
 
     .title-badge {
-      width: 10px;
-      height: 36px;
-      background: linear-gradient(180deg, var(--accent), #ff7a90);
-      box-shadow: var(--glow);
-      border-radius: 6px;
+      width: 8px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 4px;
     }
 
     h1 {
-      font-size: 22px;
+      font-size: 20px;
       margin: 0;
       letter-spacing: 0.02em;
     }
 
-    .sub {
-      margin: 6px 0 18px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
     .card {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      border-radius: 12px;
+      padding: 14px;
     }
 
     .section {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px;
-      margin-top: 14px;
-      background: rgba(255,255,255,0.02);
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 12px;
+      background: var(--panel-2);
     }
 
     .section-title {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
-      margin: 0 0 10px;
+      margin: 0 0 8px;
       letter-spacing: 0.08em;
     }
 
     label {
       display: block;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     input[type="text"], input[type="range"] {
@@ -99,20 +87,19 @@
       background: #0f0f14;
       border: 1px solid var(--line);
       color: var(--text);
-      padding: 12px 12px;
+      padding: 10px 12px;
       font-size: 16px;
-      border-radius: 10px;
+      border-radius: 8px;
       outline: none;
     }
 
     input[type="text"]:focus {
       border-color: var(--accent);
-      box-shadow: var(--glow);
     }
 
     .row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
     }
 
@@ -122,22 +109,20 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
       border: 1px solid var(--line);
       background: #111118;
       color: var(--text);
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14px;
       cursor: pointer;
     }
 
     .btn-primary {
-      background: linear-gradient(180deg, var(--accent), #b60021);
+      background: var(--accent);
       border: none;
-      box-shadow: var(--glow);
     }
 
     .btn-ghost {
@@ -147,7 +132,6 @@
 
     .btn-toggle.active {
       border-color: var(--accent);
-      box-shadow: var(--glow);
     }
 
     .btn:disabled {
@@ -156,19 +140,9 @@
     }
 
     .status {
-      margin-top: 12px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(228,0,43,0.12);
-      color: #ffccd5;
+      margin-top: 10px;
       font-size: 12px;
-      border: 1px solid rgba(228,0,43,0.35);
+      color: var(--muted);
     }
 
     .range-wrap {
@@ -191,7 +165,6 @@
       <div class="title-badge"></div>
       <div>
         <h1>LED Matrix コントローラー</h1>
-        <div class="sub">ライブ演出のように、メッセージを流そう</div>
       </div>
     </div>
 
@@ -205,8 +178,8 @@
       <div class="section">
         <p class="section-title">メッセージ</p>
         <label for="messageInput">表示するテキスト</label>
-        <input type="text" id="messageInput" placeholder="例: RANMARU LIVE!!" maxlength="120" disabled>
-        <div class="row" style="margin-top: 10px;">
+        <input type="text" id="messageInput" placeholder="MESSAGE" maxlength="120" disabled>
+        <div class="row" style="margin-top: 8px;">
           <button id="sendBtn" class="btn btn-primary" disabled>送信</button>
           <button id="clearBtn" class="btn btn-ghost" disabled>クリア</button>
         </div>
@@ -238,7 +211,6 @@
         <p class="section-title">反映</p>
         <div class="row">
           <button id="applyBtn" class="btn btn-primary" disabled>設定を反映</button>
-          <span class="pill">BLE / WiFi 共通</span>
         </div>
       </div>
     </div>
