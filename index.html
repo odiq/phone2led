@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Matrix コントローラー</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        input, button { font-size: 18px; margin: 10px; padding: 10px; width: 80%; max-width: 300px; }
+        #status { margin-top: 20px; font-weight: bold; color: gray; }
+        #error-log { margin-top: 10px; color: red; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h2>LED Matrix コントローラー</h2>
+    <button id="connectBtn">M5Stackに接続する</button><br>
+    <input type="text" id="messageInput" placeholder="表示する文字を入力" disabled>
+    <button id="sendBtn" disabled>送信</button>
+    <div id="status">未接続</div>
+    <div id="error-log"></div> <script>
+        const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+        const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+        
+        let bleCharacteristic;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const messageInput = document.getElementById('messageInput');
+        const statusDiv = document.getElementById('status');
+        const errorLog = document.getElementById('error-log');
+
+        connectBtn.addEventListener('click', async () => {
+            errorLog.innerText = ""; // エラーログをクリア
+            try {
+                statusDiv.innerText = "1. デバイスを探しています...";
+                
+                // 変更点: 名前のプレフィックスではなく、UUIDで直接検索する（Bluefy対策）
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ services: [SERVICE_UUID] }]
+                });
+
+                statusDiv.innerText = "2. 接続中 (GATT)...";
+                const server = await device.gatt.connect();
+                
+                statusDiv.innerText = "3. サービス取得中...";
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                
+                statusDiv.innerText = "4. キャラクタリスティック取得中...";
+                bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+                statusDiv.innerText = "接続完了！";
+                statusDiv.style.color = "green";
+                
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                connectBtn.disabled = true;
+
+            } catch (error) {
+                console.error(error);
+                statusDiv.innerText = "接続失敗";
+                statusDiv.style.color = "red";
+                // どこでエラーになったか画面に表示させる
+                errorLog.innerText = "エラー詳細: " + error.name + " / " + error.message;
+            }
+        });
+
+        sendBtn.addEventListener('click', async () => {
+            const text = messageInput.value;
+            if (!text || !bleCharacteristic) return;
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(text);
+                await bleCharacteristic.writeValue(data);
+                statusDiv.innerText = "「" + text + "」を送信しました！";
+            } catch (error) {
+                console.error(error);
+                errorLog.innerText = "送信エラー: " + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
