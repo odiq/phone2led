@@ -1,114 +1,383 @@
-<!doctype html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Phone2LED</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LED Matrix コントローラー</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .card { max-width: 520px; margin: 0 auto; padding: 16px; border: 1px solid #ddd; border-radius: 10px; }
-    label { display: block; margin-top: 12px; font-weight: 600; }
-    input[type="text"], input[type="range"], button { width: 100%; padding: 10px; font-size: 16px; }
-    .row { display: flex; gap: 10px; }
+    :root {
+      --bg: #0b0b0f;
+      --panel: #14141b;
+      --panel-2: #1b1b24;
+      --accent: #e4002b;
+      --accent-2: #ff4d6d;
+      --text: #f2f2f7;
+      --muted: #9aa0aa;
+      --line: #2a2a36;
+      --glow: 0 0 24px rgba(228, 0, 43, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+      background: radial-gradient(1200px 600px at 70% -20%, #2a0f14 0%, transparent 60%),
+                  radial-gradient(900px 400px at 10% 0%, #1a0a0f 0%, transparent 55%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title-badge {
+      width: 10px;
+      height: 36px;
+      background: linear-gradient(180deg, var(--accent), #ff7a90);
+      box-shadow: var(--glow);
+      border-radius: 6px;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      margin: 6px 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0 0 10px;
+      letter-spacing: 0.08em;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], input[type="range"] {
+      width: 100%;
+    }
+
+    input[type="text"] {
+      background: #0f0f14;
+      border: 1px solid var(--line);
+      color: var(--text);
+      padding: 12px 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
     .row > * { flex: 1; }
-    #status { margin-top: 12px; color: #666; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #111118;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--accent), #b60021);
+      border: none;
+      box-shadow: var(--glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .btn-toggle.active {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(228,0,43,0.12);
+      color: #ffccd5;
+      font-size: 12px;
+      border: 1px solid rgba(228,0,43,0.35);
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .range-value {
+      min-width: 54px;
+      text-align: right;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Phone2LED Control</h2>
-
-    <button id="connectBtn">Connect BLE (Bluefy)</button>
-
-    <label>Text</label>
-    <input type="text" id="textInput" maxlength="120" placeholder="Type text" />
-
-    <label>Scroll Speed (ms/col)</label>
-    <input type="range" id="speedInput" min="10" max="300" value="60" />
-
-    <label>Brightness (0-15)</label>
-    <input type="range" id="brightInput" min="0" max="15" value="4" />
-
-    <label>Invert</label>
-    <div class="row">
-      <button id="invertOff">Normal</button>
-      <button id="invertOn">Invert</button>
+  <div class="wrap">
+    <div class="title">
+      <div class="title-badge"></div>
+      <div>
+        <h1>LED Matrix コントローラー</h1>
+        <div class="sub">ライブ演出のように、メッセージを流そう</div>
+      </div>
     </div>
 
-    <button id="sendBtn">Send</button>
-    <div id="status">Not connected</div>
+    <div class="card">
+      <div class="section">
+        <p class="section-title">接続</p>
+        <button id="connectBtn" class="btn btn-primary">M5Stack に接続（BLE）</button>
+        <div class="status" id="status">未接続</div>
+      </div>
+
+      <div class="section">
+        <p class="section-title">メッセージ</p>
+        <label for="messageInput">表示するテキスト</label>
+        <input type="text" id="messageInput" placeholder="例: RANMARU LIVE!!" maxlength="120" disabled>
+        <div class="row" style="margin-top: 10px;">
+          <button id="sendBtn" class="btn btn-primary" disabled>送信</button>
+          <button id="clearBtn" class="btn btn-ghost" disabled>クリア</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="section-title">演出</p>
+
+        <label for="speedInput">スクロール速度</label>
+        <div class="range-wrap">
+          <input type="range" id="speedInput" min="10" max="300" value="60" disabled>
+          <div class="range-value" id="speedVal">60ms</div>
+        </div>
+
+        <label for="brightInput" style="margin-top: 12px;">輝度</label>
+        <div class="range-wrap">
+          <input type="range" id="brightInput" min="0" max="15" value="4" disabled>
+          <div class="range-value" id="brightVal">4</div>
+        </div>
+
+        <label style="margin-top: 12px;">LED 反転</label>
+        <div class="row">
+          <button id="invertOff" class="btn btn-toggle active" disabled>通常</button>
+          <button id="invertOn" class="btn btn-toggle" disabled>反転</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <p class="section-title">反映</p>
+        <div class="row">
+          <button id="applyBtn" class="btn btn-primary" disabled>設定を反映</button>
+          <span class="pill">BLE / WiFi 共通</span>
+        </div>
+      </div>
+    </div>
   </div>
 
-<script>
-const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+  <script>
+    const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+    const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-let bleCharacteristic = null;
-let invertValue = 0;
+    let bleCharacteristic;
+    let invertValue = 0;
 
-const statusEl = document.getElementById('status');
-const connectBtn = document.getElementById('connectBtn');
-const sendBtn = document.getElementById('sendBtn');
-const textInput = document.getElementById('textInput');
-const speedInput = document.getElementById('speedInput');
-const brightInput = document.getElementById('brightInput');
-const invertOff = document.getElementById('invertOff');
-const invertOn = document.getElementById('invertOn');
+    const connectBtn = document.getElementById('connectBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const applyBtn = document.getElementById('applyBtn');
+    const messageInput = document.getElementById('messageInput');
+    const speedInput = document.getElementById('speedInput');
+    const brightInput = document.getElementById('brightInput');
+    const invertOff = document.getElementById('invertOff');
+    const invertOn = document.getElementById('invertOn');
+    const statusDiv = document.getElementById('status');
+    const speedVal = document.getElementById('speedVal');
+    const brightVal = document.getElementById('brightVal');
 
-invertOff.addEventListener('click', () => { invertValue = 0; statusEl.textContent = 'Invert: off'; });
-invertOn.addEventListener('click', () => { invertValue = 1; statusEl.textContent = 'Invert: on'; });
+    function setEnabled(enabled) {
+      messageInput.disabled = !enabled;
+      sendBtn.disabled = !enabled;
+      clearBtn.disabled = !enabled;
+      applyBtn.disabled = !enabled;
+      speedInput.disabled = !enabled;
+      brightInput.disabled = !enabled;
+      invertOff.disabled = !enabled;
+      invertOn.disabled = !enabled;
+    }
 
-connectBtn.addEventListener('click', async () => {
-  try {
-    statusEl.textContent = 'Requesting BLE device...';
-    const device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: [SERVICE_UUID] }]
+    function setInvertButtons() {
+      if (invertValue === 0) {
+        invertOff.classList.add('active');
+        invertOn.classList.remove('active');
+      } else {
+        invertOff.classList.remove('active');
+        invertOn.classList.add('active');
+      }
+    }
+
+    function updateRangeLabels() {
+      speedVal.textContent = `${speedInput.value}ms`;
+      brightVal.textContent = `${brightInput.value}`;
+    }
+
+    updateRangeLabels();
+
+    connectBtn.addEventListener('click', async () => {
+      try {
+        statusDiv.textContent = "接続中...";
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }]
+        });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SERVICE_UUID);
+        bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+        statusDiv.textContent = "接続完了";
+        setEnabled(true);
+      } catch (error) {
+        console.error(error);
+        statusDiv.textContent = "接続エラー: " + error.message;
+      }
     });
-    statusEl.textContent = 'Connecting GATT...';
-    const server = await device.gatt.connect();
-    const service = await server.getPrimaryService(SERVICE_UUID);
-    bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
-    statusEl.textContent = 'BLE connected';
-  } catch (err) {
-    statusEl.textContent = 'BLE error: ' + err.message;
-  }
-});
 
-async function sendPayload() {
-  const text = textInput.value || '';
-  const speed = speedInput.value;
-  const bright = brightInput.value;
-  const invert = invertValue;
-  const payload = `T:${text};S:${speed};B:${bright};I:${invert}`;
-
-  if (bleCharacteristic) {
-    const data = new TextEncoder().encode(payload);
-    await bleCharacteristic.writeValue(data);
-    statusEl.textContent = 'Sent via BLE';
-    return;
-  }
-
-  if (location.protocol.startsWith('http')) {
-    const body = new URLSearchParams({
-      text, speed, brightness: bright, invert
+    invertOff.addEventListener('click', () => {
+      invertValue = 0;
+      setInvertButtons();
     });
-    await fetch('/api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body
+
+    invertOn.addEventListener('click', () => {
+      invertValue = 1;
+      setInvertButtons();
     });
-    statusEl.textContent = 'Sent via WiFi AP';
-    return;
-  }
 
-  statusEl.textContent = 'Connect BLE or open this page via AP';
-}
+    speedInput.addEventListener('input', updateRangeLabels);
+    brightInput.addEventListener('input', updateRangeLabels);
 
-sendBtn.addEventListener('click', () => {
-  sendPayload().catch(err => {
-    statusEl.textContent = 'Send error: ' + err.message;
-  });
-});
-</script>
+    async function sendPayload(textOnly = false) {
+      const text = messageInput.value || "";
+      const speed = speedInput.value;
+      const bright = brightInput.value;
+      const invert = invertValue;
+
+      let payload = "";
+      if (textOnly) {
+        payload = `T:${text}`;
+      } else {
+        payload = `T:${text};S:${speed};B:${bright};I:${invert}`;
+      }
+
+      if (bleCharacteristic) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(payload);
+        await bleCharacteristic.writeValue(data);
+        statusDiv.textContent = textOnly ? "テキスト送信済み" : "設定を反映しました";
+        return;
+      }
+
+      if (location.protocol.startsWith('http')) {
+        const body = new URLSearchParams({
+          text,
+          speed,
+          brightness: bright,
+          invert
+        });
+        await fetch('/api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        statusDiv.textContent = "設定を反映しました";
+        return;
+      }
+
+      statusDiv.textContent = "BLE接続かAP接続で利用してください";
+    }
+
+    sendBtn.addEventListener('click', () => {
+      sendPayload(true).catch(err => {
+        statusDiv.textContent = "送信エラー: " + err.message;
+      });
+    });
+
+    applyBtn.addEventListener('click', () => {
+      sendPayload(false).catch(err => {
+        statusDiv.textContent = "反映エラー: " + err.message;
+      });
+    });
+
+    clearBtn.addEventListener('click', () => {
+      messageInput.value = "";
+    });
+  </script>
 </body>
 </html>
