@@ -1,82 +1,114 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LED Matrix コントローラー</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        input, button { font-size: 18px; margin: 10px; padding: 10px; width: 80%; max-width: 300px; }
-        #status { margin-top: 20px; font-weight: bold; color: gray; }
-        #error-log { margin-top: 10px; color: red; font-size: 12px; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Phone2LED</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .card { max-width: 520px; margin: 0 auto; padding: 16px; border: 1px solid #ddd; border-radius: 10px; }
+    label { display: block; margin-top: 12px; font-weight: 600; }
+    input[type="text"], input[type="range"], button { width: 100%; padding: 10px; font-size: 16px; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    #status { margin-top: 12px; color: #666; }
+  </style>
 </head>
 <body>
-    <h2>LED Matrix コントローラー</h2>
-    <button id="connectBtn">M5Stackに接続する</button><br>
-    <input type="text" id="messageInput" placeholder="表示する文字を入力" disabled>
-    <button id="sendBtn" disabled>送信</button>
-    <div id="status">未接続</div>
-    <div id="error-log"></div> <script>
-        const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-        const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-        
-        let bleCharacteristic;
+  <div class="card">
+    <h2>Phone2LED Control</h2>
 
-        const connectBtn = document.getElementById('connectBtn');
-        const sendBtn = document.getElementById('sendBtn');
-        const messageInput = document.getElementById('messageInput');
-        const statusDiv = document.getElementById('status');
-        const errorLog = document.getElementById('error-log');
+    <button id="connectBtn">Connect BLE (Bluefy)</button>
 
-        connectBtn.addEventListener('click', async () => {
-            errorLog.innerText = ""; // エラーログをクリア
-            try {
-                statusDiv.innerText = "1. デバイスを探しています...";
-                
-                // 変更点: 名前のプレフィックスではなく、UUIDで直接検索する（Bluefy対策）
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ services: [SERVICE_UUID] }]
-                });
+    <label>Text</label>
+    <input type="text" id="textInput" maxlength="120" placeholder="Type text" />
 
-                statusDiv.innerText = "2. 接続中 (GATT)...";
-                const server = await device.gatt.connect();
-                
-                statusDiv.innerText = "3. サービス取得中...";
-                const service = await server.getPrimaryService(SERVICE_UUID);
-                
-                statusDiv.innerText = "4. キャラクタリスティック取得中...";
-                bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+    <label>Scroll Speed (ms/col)</label>
+    <input type="range" id="speedInput" min="10" max="300" value="60" />
 
-                statusDiv.innerText = "接続完了！";
-                statusDiv.style.color = "green";
-                
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
-                connectBtn.disabled = true;
+    <label>Brightness (0-15)</label>
+    <input type="range" id="brightInput" min="0" max="15" value="4" />
 
-            } catch (error) {
-                console.error(error);
-                statusDiv.innerText = "接続失敗";
-                statusDiv.style.color = "red";
-                // どこでエラーになったか画面に表示させる
-                errorLog.innerText = "エラー詳細: " + error.name + " / " + error.message;
-            }
-        });
+    <label>Invert</label>
+    <div class="row">
+      <button id="invertOff">Normal</button>
+      <button id="invertOn">Invert</button>
+    </div>
 
-        sendBtn.addEventListener('click', async () => {
-            const text = messageInput.value;
-            if (!text || !bleCharacteristic) return;
-            try {
-                const encoder = new TextEncoder();
-                const data = encoder.encode(text);
-                await bleCharacteristic.writeValue(data);
-                statusDiv.innerText = "「" + text + "」を送信しました！";
-            } catch (error) {
-                console.error(error);
-                errorLog.innerText = "送信エラー: " + error.message;
-            }
-        });
-    </script>
+    <button id="sendBtn">Send</button>
+    <div id="status">Not connected</div>
+  </div>
+
+<script>
+const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+
+let bleCharacteristic = null;
+let invertValue = 0;
+
+const statusEl = document.getElementById('status');
+const connectBtn = document.getElementById('connectBtn');
+const sendBtn = document.getElementById('sendBtn');
+const textInput = document.getElementById('textInput');
+const speedInput = document.getElementById('speedInput');
+const brightInput = document.getElementById('brightInput');
+const invertOff = document.getElementById('invertOff');
+const invertOn = document.getElementById('invertOn');
+
+invertOff.addEventListener('click', () => { invertValue = 0; statusEl.textContent = 'Invert: off'; });
+invertOn.addEventListener('click', () => { invertValue = 1; statusEl.textContent = 'Invert: on'; });
+
+connectBtn.addEventListener('click', async () => {
+  try {
+    statusEl.textContent = 'Requesting BLE device...';
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [SERVICE_UUID] }]
+    });
+    statusEl.textContent = 'Connecting GATT...';
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    bleCharacteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+    statusEl.textContent = 'BLE connected';
+  } catch (err) {
+    statusEl.textContent = 'BLE error: ' + err.message;
+  }
+});
+
+async function sendPayload() {
+  const text = textInput.value || '';
+  const speed = speedInput.value;
+  const bright = brightInput.value;
+  const invert = invertValue;
+  const payload = `T:${text};S:${speed};B:${bright};I:${invert}`;
+
+  if (bleCharacteristic) {
+    const data = new TextEncoder().encode(payload);
+    await bleCharacteristic.writeValue(data);
+    statusEl.textContent = 'Sent via BLE';
+    return;
+  }
+
+  if (location.protocol.startsWith('http')) {
+    const body = new URLSearchParams({
+      text, speed, brightness: bright, invert
+    });
+    await fetch('/api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    });
+    statusEl.textContent = 'Sent via WiFi AP';
+    return;
+  }
+
+  statusEl.textContent = 'Connect BLE or open this page via AP';
+}
+
+sendBtn.addEventListener('click', () => {
+  sendPayload().catch(err => {
+    statusEl.textContent = 'Send error: ' + err.message;
+  });
+});
+</script>
 </body>
 </html>
